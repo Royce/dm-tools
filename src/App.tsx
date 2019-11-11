@@ -29,6 +29,7 @@ import { FiX as Cancel, FiAlertTriangle as Surprise } from "react-icons/fi";
 import { useToggle } from "./hooks/useToggle";
 import { rng, Dice } from "./rng";
 import { Layout } from "./Layout";
+import { InitiativeButton } from "./InitiativeButton";
 
 const Players = ["Orel", "Betty/Rob", "Rinn", "Steve", "Tiro"];
 const Monsters = ["Monster 1"];
@@ -60,8 +61,8 @@ const initialState: State = {
   monsters: Monsters,
   round: { number: 1, rng: rng() },
   choices: [
-    { round: 1, ...Rinn, choice: ["move", true] },
-    { round: 1, ...Rinn, choice: ["action", "spell"] },
+    { round: 1, ...Orel, choice: ["move", true] },
+    { round: 1, ...Orel, choice: ["action", "spell"] },
     { round: 1, ...Rinn, choice: ["move", true], confirmed_at: 4 }
   ]
 };
@@ -196,17 +197,24 @@ const choices = createSelector(
 );
 
 const commited = (state: State) => {
-  return [{ player: "Tom", choices: ["move", "spell"] }];
+  return _.chain(state.choices)
+    .filter(c => c.confirmed_at !== undefined)
+    .groupBy(c => c.creatureName)
+    .map((choices, creatureName) => {
+      return { creatureName, choices: choices.map(({ choice }) => choice) };
+    })
+    .value();
 };
 
 const pendingCommit = createSelector(
   getCurrentRoundChoicesWithOffsets,
   choices => {
     return _.chain(choices)
+      .filter(({ confirmed_at }) => confirmed_at === undefined)
       .groupBy("creatureName")
       .map(thisPlayersChoices => ({
-        name: thisPlayersChoices[0].creatureName,
-        choices: thisPlayersChoices.map(choice => choice.choice),
+        creatureName: thisPlayersChoices[0].creatureName,
+        choices: thisPlayersChoices.map(({ choice }) => choice),
         initiative: _.reduce(
           thisPlayersChoices,
           (prev, { offset }) => prev + offset,
@@ -225,6 +233,7 @@ const stillSurprised = createSelector(
   getCurrentRoundChoicesWithOffsets,
   choices => {
     return _.chain(choices)
+      .filter(({ confirmed_at }) => confirmed_at === undefined)
       .filter(({ choice }) => choice[0] === "surprised")
       .map(({ creatureName, offset }) => ({ creatureName, initiative: offset }))
       .value();
@@ -236,13 +245,13 @@ const pendingChoice = createSelector(
   getCurrentRoundChoicesWithOffsets,
   (players, choices) => {
     const playersWithChoices = _.chain(choices)
-      .map("player")
+      .map("creatureName")
       .uniq()
       .value();
 
     return _.chain(players)
       .without(...playersWithChoices)
-      .map(playerName => ({ player: playerName }))
+      .map(name => ({ creatureName: name }))
       .value();
   }
 );
@@ -310,22 +319,24 @@ const App = function App() {
       <Container>
         <Row>
           <Col xs="3">
-            {/* {commited(state).map(ActionBlock)}
-            {_.sortBy(
-              _.flatten([
-                pendingCommit(state).map(x => ({ onClick: () => {}, ...x })),
-                stillSurprised(state).map(x => ({
-                  onClick: () => {},
-                  surprised: true,
-                  ...x
-                }))
+            {commited(state).map(ActionBlock)}
+            {_.chain([
+              ...pendingCommit(state).map(({ initiative, ...props }) => [
+                initiative,
+                <ActionBlock onClick={() => {}} {...props} />
               ]),
-              "initiative"
-            ).map(({ surprised, ...x }) =>
-              surprised ? <SurprisedBlock {...x} /> : <ActionBlock {...x} />
-            )} */}
+              ...stillSurprised(state).map(({ initiative, ...props }) => [
+                initiative,
+                <SurprisedBlock onClick={() => {}} {...props} />
+              ])
+            ])
+              .sortBy(([initiative]) => initiative)
+              .map(([, element]) => element)
+              .value()}
             {pendingChoice(state).length > 0 && (
-              <Alert>{_.map(pendingChoice(state), "player").join(", ")}</Alert>
+              <Alert>
+                {_.map(pendingChoice(state), "creatureName").join(", ")}
+              </Alert>
             )}
           </Col>
           <Col xs="9">
@@ -374,17 +385,18 @@ const App = function App() {
 };
 
 const ActionBlock = function({
-  player,
-  choices
+  creatureName,
+  choices,
+  onClick
 }: {
-  player: string;
+  creatureName: string;
   choices: ChoiceTuple[];
+  onClick?: () => void;
 }) {
-  const onClick = () => {};
   return (
     <>
       <Alert color={onClick ? "info" : "white"} toggle={onClick}>
-        {player}
+        {creatureName}
         {choices.map(([category, choice]) => {
           return (
             <>
@@ -423,33 +435,9 @@ const SurprisedBlock = function({
   return (
     <>
       <Alert color={onClick ? "warning" : "white"} toggle={onClick}>
-        {name}
-        <Badge color={"warning"}>Surprised</Badge>
+        {name} <Badge color={"warning"}>Surprised</Badge>
       </Alert>
     </>
-  );
-};
-
-const InitiativeButton = function({
-  color,
-  on,
-  onClick,
-  children
-}: {
-  color?: string;
-  onClick: () => void;
-  on?: boolean;
-  children: any;
-}) {
-  return (
-    <Button
-      outline={!on}
-      size="sm"
-      onClick={onClick}
-      color={on ? color : undefined}
-    >
-      {children}
-    </Button>
   );
 };
 
