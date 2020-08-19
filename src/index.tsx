@@ -1,12 +1,52 @@
-import React from "react";
+import React, { useState } from "react";
+import {
+  Nav,
+  NavItem,
+  NavLink,
+  TabContent,
+  TabPane,
+  Container,
+} from "reactstrap";
 import ReactDOM from "react-dom";
-import App from "./App";
-import * as serviceWorker from "./serviceWorker";
+import Initiative from "./Initiative";
+import Monsters from "./Monsters";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-ReactDOM.render(<App />, document.getElementById("root"));
+type Tab = "initiative" | "monsters";
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+const Everything = function Everything() {
+  const [activeTab, setActiveTab] = useState<Tab>("monsters");
+
+  return (
+    <Container fluid={true}>
+      <Nav tabs={true}>
+        <NavItem>
+          <NavLink
+            className={activeTab === "initiative" ? "active" : ""}
+            onClick={() => setActiveTab("initiative")}
+          >
+            Initiative
+          </NavLink>
+        </NavItem>
+        <NavItem>
+          <NavLink
+            className={activeTab === "monsters" ? "active" : ""}
+            onClick={() => setActiveTab("monsters")}
+          >
+            Monsters
+          </NavLink>
+        </NavItem>
+      </Nav>
+      <TabContent activeTab={activeTab}>
+        <TabPane tabId={"initiative"}>
+          {activeTab === "initiative" && <Initiative />}
+        </TabPane>
+        <TabPane tabId={"monsters"}>
+          <Monsters />
+        </TabPane>
+      </TabContent>
+    </Container>
+  );
+};
+
+ReactDOM.render(<Everything />, document.getElementById("root"));

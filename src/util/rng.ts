@@ -4,6 +4,7 @@ export function rng(s = Math.round(Math.random() * 10000)): Dice {
   var mask = 0xffffffff;
   var m_w = (123456789 + s) & mask;
   var m_z = (987654321 - s) & mask;
+
   // Returns number between 0 (inclusive) and 1.0 (exclusive),
   // just like Math.random().
   function random() {
@@ -13,11 +14,14 @@ export function rng(s = Math.round(Math.random() * 10000)): Dice {
     result /= 4294967296;
     return result;
   }
+
   function roll(n: number) {
     return Math.ceil(random() * n);
   }
+
   function seed(n: number) {
     return rng(s + n);
   }
+
   return { seed, roll };
 }

@@ -2,7 +2,7 @@ import React from "react";
 import { Collapse, Navbar, NavbarToggler, NavbarBrand, Nav } from "reactstrap";
 import { useToggle } from "./hooks/useToggle";
 export const Layout = function Layout({
-  children
+  children,
 }: {
   children: React.ReactNode;
 }) {

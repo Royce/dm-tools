@@ -1,22 +1,24 @@
 import React from "react";
 import { Button } from "reactstrap";
-import { IconBaseProps } from "react-icons/lib/cjs";
 
-export type InitiativeButtonProps = {
+export type ToggleButtonProps = {
   color?: string;
   onClick: () => void;
   on?: boolean;
+  disabled: boolean;
   children: any;
 };
 
-export const InitiativeButton = function({
+export const ToggleButton = function ({
   color,
   on,
+  disabled,
   onClick,
-  children
-}: InitiativeButtonProps) {
+  children,
+}: ToggleButtonProps) {
   return (
     <Button
+      disabled={disabled}
       outline={!on}
       size="sm"
       onClick={onClick}
