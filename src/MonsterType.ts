@@ -43,6 +43,7 @@ const UsageCodec = t.union([
     rest_types: t.array(t.union([t.literal("short"), t.literal("long")])),
   }),
 ]);
+export type UsageType = t.TypeOf<typeof UsageCodec>;
 const ActionPartialsCodec = t.partial({
   attack_bonus: t.number,
   damage: DamageArrayCodec,
@@ -123,6 +124,7 @@ export const MonsterCodec = t.intersection([
   }),
   t.partial({
     actions: ActionsCodec,
+    reactions: ActionsCodec,
     legendary_actions: ActionsCodec,
     special_abilities: SpecialAbilitiesArrayCodec,
     note: t.string,

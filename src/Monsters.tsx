@@ -1,13 +1,14 @@
+/** @jsx jsx */
+import { jsx } from "theme-ui";
 import React from "react";
 import { RecoilRoot, selector, atom, useRecoilValue } from "recoil";
-import { Container } from "reactstrap";
 import axios from "axios";
 import * as f from "fp-ts";
 
 import MonsterComponent from "./MonsterComponent";
 import { MonsterCodec, MonsterType } from "./MonsterType";
 
-const monsterId = atom({ key: "monsterId", default: "knight" });
+const monsterId = atom({ key: "monsterId", default: "bone-devil" });
 
 const monsterQuery = selector<MonsterType>({
   key: "monsterQuery",
@@ -34,14 +35,10 @@ const RandomMonster = function RandomMonster() {
 const Monsters = function Init() {
   return (
     <RecoilRoot>
-      {/* <Layout> */}
-      <Container fluid={true}>
-        <h1>Heading</h1>
-        <React.Suspense fallback={<div>Loading...</div>}>
-          <RandomMonster />
-        </React.Suspense>
-      </Container>
-      {/* </Layout> */}
+      <h1>Heading</h1>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <RandomMonster />
+      </React.Suspense>
     </RecoilRoot>
   );
 };
