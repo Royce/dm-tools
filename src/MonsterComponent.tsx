@@ -1,6 +1,6 @@
 /** @jsx jsx */
 import { jsx, Badge, Box, Flex, Card, Heading } from "theme-ui";
-import React, { ReactText } from "react";
+import React from "react";
 import _ from "lodash";
 import { MonsterType, UsageType } from "./MonsterType";
 
@@ -10,13 +10,7 @@ const Monster = function Monster(props: MonsterType) {
       <Card sx={{ columnCount: [1, 2] }}>
         <Flex>
           <Box sx={{ flex: "1 1 auto" }}>
-            <Heading
-              as={"h2"}
-              sx={{
-                fontSize: 4,
-                fontVariant: "small-caps",
-              }}
-            >
+            <Heading as="h2" variant="title">
               {props.name}
             </Heading>
           </Box>
@@ -24,24 +18,13 @@ const Monster = function Monster(props: MonsterType) {
             <MonsterCR {...props} />
           </Box>
         </Flex>
-        <Heading
-          as={"h3"}
-          sx={{
-            fontSize: 1,
-            fontStyle: "italic",
-          }}
-        >
+        <Heading as={"h3"} variant="subheading">
           {props.size} {props.type}
           {!_.isEmpty(props.subtype) && `, ${props.subtype}`}
         </Heading>
         <TaperedRule />
-        <Box>
-          <b>Armor Class</b>: {props.armor_class}
-        </Box>
-        <Box>
-          <b>Hit Points</b>: {props.hit_points} (
-          <Rollable>{hitPointDiceString(props)}</Rollable>)
-        </Box>
+        <MonsterArmorClass {...props} />
+        <MonsterHitPoints {...props} />
         <MonsterSpeed {...props} />
         <Box sx={{ breakInside: "avoid" }}>
           <TaperedRule />
@@ -64,7 +47,7 @@ const Monster = function Monster(props: MonsterType) {
         <MonsterLegendaryActions {...props} />
         <MonsterReactions {...props} />
       </Card>
-      <pre>{JSON.stringify(props, null, 2)}</pre>
+      {/* <pre>{JSON.stringify(props, null, 2)}</pre> */}
     </React.Fragment>
   );
 };
@@ -114,6 +97,17 @@ const MonsterCR = function MonsterCR({ challenge_rating: cr }: MonsterType) {
   return <Badge>CR {cr >= 1 ? cr : `1/${Math.round(1 / cr)}`}</Badge>;
 };
 
+const MonsterArmorClass = function MonsterArmorClass(props: MonsterType) {
+  return (
+    <Box>
+      <Heading as="h4" variant="inline">
+        Armor Class
+      </Heading>
+      {props.armor_class}
+    </Box>
+  );
+};
+
 const numberToStringWithSign = function numberToStringWithSign(
   n: number
 ): string {
@@ -135,19 +129,42 @@ const attributeScoreToModifier = function attributeScoreToModifier(
   return Math.floor((score - 10) / 2);
 };
 
-const hitPointDiceString = function hitPointDiceString(
-  monster: MonsterType
-): string {
-  const constitutionModifier = attributeScoreToModifier(monster.constitution);
-  const numberOfHitDice = Number(monster.hit_dice.split("d")[0]);
+const MonsterHitPoints = function MonsterHitPoints(props: MonsterType) {
+  return (
+    <Box>
+      <Heading as="h4" variant="inline">
+        Hit Points
+      </Heading>
+      {props.hit_points}
+      {props.hit_dice && (
+        <React.Fragment>
+          (
+          <Rollable>
+            {hitPointDiceString(props.hit_dice, props.constitution)}
+          </Rollable>
+          )
+        </React.Fragment>
+      )}
+    </Box>
+  );
+};
 
-  return `${monster.hit_dice}+${numberOfHitDice * constitutionModifier}`;
+const hitPointDiceString = function hitPointDiceString(
+  hit_dice: string,
+  constitution: number
+): string {
+  const constitutionModifier = attributeScoreToModifier(constitution);
+  const numberOfHitDice = Number(hit_dice.split("d")[0]);
+
+  return `${hit_dice}+${numberOfHitDice * constitutionModifier}`;
 };
 
 const MonsterSpeed = function MonsterSpeed(props: MonsterType) {
   return (
     <Box>
-      <b>Speed: </b>
+      <Heading as="h4" variant="inline">
+        Speed
+      </Heading>
       {_.chain(props.speed)
         .map((value, key) => `${key} ${value}`)
         .join(", ")
@@ -163,18 +180,7 @@ const MonsterLegendaryActions = function MonsterLegendaryActions(
 
   return (
     <Box>
-      <Heading
-        as={"h3"}
-        sx={{
-          fontSize: 3,
-          fontWeight: "normal",
-          fontVariant: "small-caps",
-          borderBottom: "1px solid darkred",
-          marginTop: 2,
-        }}
-      >
-        Legendary Actions
-      </Heading>
+      <Heading as={"h3"}>Legendary Actions</Heading>
       <ListOfNameDescriptions list={props.legendary_actions} />
     </Box>
   );
@@ -185,19 +191,7 @@ const MonsterActions = function MonsterActions(props: MonsterType) {
 
   return (
     <React.Fragment>
-      <Heading
-        as={"h3"}
-        sx={{
-          fontSize: 3,
-          fontWeight: "normal",
-          fontVariant: "small-caps",
-          borderBottom: "1px solid darkred",
-          marginTop: 2,
-          breakAfter: "avoid",
-        }}
-      >
-        Actions
-      </Heading>
+      <Heading as={"h3"}>Actions</Heading>
       <ListOfNameDescriptions list={props.actions} />
     </React.Fragment>
   );
@@ -208,18 +202,7 @@ const MonsterReactions = function MonsterReactions(props: MonsterType) {
 
   return (
     <Box>
-      <Heading
-        as={"h3"}
-        sx={{
-          fontSize: 3,
-          fontWeight: "normal",
-          fontVariant: "small-caps",
-          borderBottom: "1px solid darkred",
-          marginTop: 2,
-        }}
-      >
-        Reactions
-      </Heading>
+      <Heading as={"h3"}>Reactions</Heading>
       <ListOfNameDescriptions list={props.reactions} />
     </Box>
   );
@@ -230,15 +213,7 @@ const MonsterProficiencies = function MonsterProficiencies(props: MonsterType) {
 
   return (
     <Box>
-      <Heading
-        as="h4"
-        sx={{
-          display: "inline",
-          fontSize: 2,
-          fontWeight: "bold",
-          marginRight: 2,
-        }}
-      >
+      <Heading as="h4" variant="inline">
         Proficiencies
       </Heading>
       <p sx={{ display: "inline" }}>
@@ -257,19 +232,11 @@ const MonsterProficiencies = function MonsterProficiencies(props: MonsterType) {
 };
 
 const MonsterSenses = function MonsterSenses(props: MonsterType) {
-  if (!props.senses) return null;
+  if (_.isEmpty(props.senses)) return null;
 
   return (
     <Box>
-      <Heading
-        as="h4"
-        sx={{
-          display: "inline",
-          fontSize: 2,
-          fontWeight: "bold",
-          marginRight: 2,
-        }}
-      >
+      <Heading as="h4" variant="inline">
         Senses
       </Heading>
       <p sx={{ display: "inline" }}>
@@ -294,15 +261,7 @@ const MonsterModifiers = function MonsterModifiers(props: {
 
   return (
     <Box>
-      <Heading
-        as="h4"
-        sx={{
-          display: "inline",
-          fontSize: 2,
-          fontWeight: "bold",
-          marginRight: 2,
-        }}
-      >
+      <Heading as="h4" variant="inline">
         {props.heading}
       </Heading>
       <p sx={{ display: "inline" }}>{_.chain(props.list).join(", ").value()}</p>
@@ -326,15 +285,7 @@ const ListOfNameDescriptions = function ListOfNameDescriptions({
       {_.chain(list)
         .map(({ name, desc, usage }) => (
           <Box>
-            <Heading
-              as="h4"
-              sx={{
-                display: "inline",
-                fontSize: 2,
-                fontWeight: "bold",
-                marginRight: 2,
-              }}
-            >
+            <Heading as="h4" variant="inline">
               {name}
             </Heading>
             <p sx={{ display: "inline" }}>
@@ -350,7 +301,7 @@ const ListOfNameDescriptions = function ListOfNameDescriptions({
 
 const Description = function (props: { desc: string }) {
   const parts = props.desc.split(/(:|\.\s|\+\d+|\([\d\s\+d]+\))/);
-  console.log(parts);
+
   return (
     <React.Fragment>
       {parts.map((v, index) => {
@@ -373,11 +324,11 @@ const Rollable = function Rollable(props: {
   children: string | number;
 }) {
   return (
-    <u>
+    <span sx={{ color: "primary" }}>
       {typeof props.children === "string"
         ? props.children
         : numberToStringWithSign(props.children)}
-    </u>
+    </span>
   );
 };
 
@@ -392,15 +343,14 @@ const usageString = function usageString(usage: UsageType) {
   }
 };
 
-const TaperedRule = function Seperator(props: { avoid?: string }) {
+const TaperedRule = function Seperator() {
   return (
     <svg
       sx={{
-        fill: "#922610",
-        stroke: "#922610",
+        fill: "accent",
+        stroke: "accent",
         marginTop: "0.6em",
         marginBottom: "0.35em",
-        breakBefore: "avoid",
       }}
       width="100%"
       viewBox="0 0 400 5"
