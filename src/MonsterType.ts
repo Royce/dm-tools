@@ -31,6 +31,8 @@ const DamageArrayCodec = t.array(
     }),
   ])
 );
+export type DamageType = t.TypeOf<typeof DamageArrayCodec>;
+
 const UsageCodec = t.union([
   t.type({ type: t.literal("per day"), times: t.number }),
   t.type({
@@ -80,9 +82,10 @@ const ActionPartialsCodec = t.partial({
   }),
   dc: DifficultyClassCodec,
 });
-const ActionsCodec = t.array(
-  t.intersection([NameDescCodec, ActionPartialsCodec])
-);
+const ActionCodec = t.intersection([NameDescCodec, ActionPartialsCodec]);
+const ActionsCodec = t.array(ActionCodec);
+export type ActionType = t.TypeOf<typeof ActionCodec>;
+
 const SizesCodec = t.union([
   t.literal("Tiny"),
   t.literal("Small"),
@@ -98,13 +101,8 @@ export const MonsterCodec = t.intersection([
   t.type({
     index: t.string,
     name: t.string,
-    size: SizesCodec,
-    type: t.string,
-    subtype: t.union([t.string, t.null]),
-    alignment: t.string,
     armor_class: t.number,
     hit_points: t.number,
-    hit_dice: t.string,
     speed: t.record(t.string, t.union([t.string, t.literal(true)])),
     constitution: t.number,
     strength: t.number,
@@ -118,15 +116,21 @@ export const MonsterCodec = t.intersection([
     damage_immunities: t.array(t.string),
     condition_immunities: t.array(ReferencedTermCodec),
     senses: t.record(t.string, t.union([t.string, t.number])),
-    languages: t.string,
     challenge_rating: t.number,
-    url: t.string,
   }),
   t.partial({
+    description: t.string,
+    size: SizesCodec,
+    type: t.string,
+    subtype: t.union([t.string, t.null]),
+    alignment: t.string,
+    hit_dice: t.string,
     actions: ActionsCodec,
     reactions: ActionsCodec,
     legendary_actions: ActionsCodec,
     special_abilities: SpecialAbilitiesArrayCodec,
+    languages: t.string,
+    url: t.string,
     note: t.string,
   }),
 ]);
