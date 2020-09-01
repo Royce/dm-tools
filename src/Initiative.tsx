@@ -33,10 +33,11 @@ import {
   GiTrade as Swap,
 } from "react-icons/gi";
 import { FiAlertTriangle as Surprise } from "react-icons/fi";
-import { BsCheck as Confirm } from "react-icons/bs";
+// import { BsCheck as Confirm } from "react-icons/bs";
 
 import { rng, Dice } from "./util/rng";
 import { hashString } from "./util/hash";
+import { Confirm } from "./ButtonConfirm";
 import { ToggleButton } from "./ToggleButton";
 
 //
@@ -643,7 +644,7 @@ const ActionsSummary = function ActionsSummary({
           </>
         ))}
       {!confirmed && (
-        <Close
+        <Confirm
           ml="auto"
           mr={-2}
           onClick={() => confirmChoices(creature, total)}
