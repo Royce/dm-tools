@@ -14,14 +14,15 @@ import {
 } from "recoil";
 import _ from "lodash";
 import {
-  Badge,
-  Container,
-  Row,
-  Col,
   Button,
-  ListGroupItem,
-  ListGroup,
-} from "reactstrap";
+  Badge,
+  Close,
+  Alert,
+  Heading,
+  Box,
+  Grid,
+  Flex,
+} from "theme-ui";
 import {
   GiWalk as Move,
   GiRun as Dash,
@@ -36,7 +37,6 @@ import { BsCheck as Confirm } from "react-icons/bs";
 
 import { rng, Dice } from "./util/rng";
 import { hashString } from "./util/hash";
-import { Layout } from "./Layout";
 import { ToggleButton } from "./ToggleButton";
 
 //
@@ -254,7 +254,8 @@ const describeChoice = function describeChoice({ category, choice }: Choice) {
     case "melee":
     case "ranged":
     case "spell":
-      return `${choice} attack`;
+      return choice;
+    // return `${choice} attack`;
     case "move":
       return category === "move" ? "move" : "dash";
     case "other":
@@ -311,7 +312,11 @@ const NewRoundNumberButton = function NewRoundNumberButton() {
   const incrementRound = useCallback(() => {
     setRoundNumber((n) => n + 1);
   }, [setRoundNumber]);
-  return <Button onClick={incrementRound}>Next Round</Button>;
+  return (
+    <Button variant="secondary" onClick={incrementRound} sx={{ fontSize: 1 }}>
+      Next Round
+    </Button>
+  );
 };
 
 const CreatureItem = function CreatureItem({ id }: { id: CreatureId }) {
@@ -344,29 +349,12 @@ const AddCreatureButton = function SeedEncounterButton() {
     []
   );
 
-  return <Button onClick={addCreature}>Add Creature</Button>;
+  return (
+    <Button variant="secondary" onClick={addCreature}>
+      Add Creature
+    </Button>
+  );
 };
-
-// type InitiativeButtonProps = {
-//   color?: string;
-//   onClick: () => void;
-//   on?: boolean;
-//   disabled: boolean;
-//   children: any;
-// };
-// const InitiativeButton = function (props: InitiativeButtonProps) {
-//   return (
-//     <Button
-//       disabled={props.disabled}
-//       outline={!props.on}
-//       size="sm"
-//       onClick={props.onClick}
-//       color={props.on ? props.color : undefined}
-//     >
-//       {props.children}
-//     </Button>
-//   );
-// };
 
 type CreatureAndRound = {
   id: CreatureId;
@@ -386,10 +374,9 @@ const BinaryChoiceBase = function BinaryChoiceBase({
       disabled={confirmed}
       on={category === choice}
       onClick={() => setChoice(category === choice ? undefined : category)}
-      color={"primary"}
+      color={category}
     >
-      {category === "move" && <Move />}
-      {category === "swap" && <Swap />}
+      {category === "move" ? <Move /> : category === "swap" ? <Swap /> : null}
     </ToggleButton>
   );
 };
@@ -412,9 +399,9 @@ const SurprisedChoice = function SurprisedChoice({ id }: { id: CreatureId }) {
       disabled={false}
       on={surprised}
       onClick={() => setSurprised(!surprised)}
-      color={"primary"}
+      color={"surprised"}
     >
-      {"surprised" === "surprised" && <Surprise />}
+      {"surprised" === "surprised" ? <Surprise /> : null}
     </ToggleButton>
   );
 };
@@ -435,19 +422,19 @@ const ActionChoiceBase = function ActionChoiceBase({
       disabled={disabled}
       on={choice === value}
       onClick={() => setChoice(choice === value ? undefined : value)}
-      color={
-        value === "move"
-          ? "primary"
-          : value === "other"
-          ? "secondary"
-          : "danger"
-      }
+      color={value}
     >
-      {value === "move" && <Dash />}
-      {value === "spell" && <Spell />}
-      {value === "melee" && <Melee />}
-      {value === "ranged" && <Ranged />}
-      {value === "other" && <Other />}
+      {value === "move" ? (
+        <Dash />
+      ) : value === "spell" ? (
+        <Spell />
+      ) : value === "melee" ? (
+        <Melee />
+      ) : value === "ranged" ? (
+        <Ranged />
+      ) : value === "other" ? (
+        <Other />
+      ) : null}
     </ToggleButton>
   );
 };
@@ -488,27 +475,43 @@ const ChoicesItem = function Choices({ id }: { id: CreatureId }) {
   const creature = useRecoilValue(creatureForId(id));
   const round = useRecoilValue(currentRoundState);
   return (
-    <>
-      <hr />
-      <h2>{creature.name}</h2>
-      <MoveChoice id={id} round={round} />
-      {" - "}
-      <SwapChoice id={id} round={round} />
-      {" - "}
-      <ActionChoice id={id} round={round} value={"move"} />
-      <ActionChoice id={id} round={round} value={"melee"} />
-      <ActionChoice id={id} round={round} value={"ranged"} />
-      <ActionChoice id={id} round={round} value={"spell"} />
-      <ActionChoice id={id} round={round} value={"other"} />
-      {" - "}
-      <BonusActionChoice id={id} round={round} value={"move"} />
-      <BonusActionChoice id={id} round={round} value={"melee"} />
-      <BonusActionChoice id={id} round={round} value={"ranged"} />
-      <BonusActionChoice id={id} round={round} value={"spell"} />
-      <BonusActionChoice id={id} round={round} value={"other"} />
-      {" - "}
-      <SurprisedChoice id={id} />
-    </>
+    <Grid gap={1} columns={[1, "1fr 420px"]} pb={3}>
+      <Box sx={{ alignSelf: "flex-end" }}>
+        <Heading
+          as="h2"
+          variant={"heading"}
+          sx={{
+            alignSelf: "baseline",
+            borderBottomColor: creature.type === "player" ? "primary" : null,
+          }}
+        >
+          {creature.name}
+        </Heading>
+      </Box>
+      <Flex sx={{ justifyContent: "space-between" }}>
+        <Box>
+          <MoveChoice id={id} round={round} />
+        </Box>
+        {/* <SwapChoice id={id} round={round} /> */}
+        <Box>
+          <ActionChoice id={id} round={round} value={"move"} />
+          <ActionChoice id={id} round={round} value={"melee"} />
+          <ActionChoice id={id} round={round} value={"ranged"} />
+          <ActionChoice id={id} round={round} value={"spell"} />
+          <ActionChoice id={id} round={round} value={"other"} />
+        </Box>
+        <Box>
+          <BonusActionChoice id={id} round={round} value={"move"} />
+          <BonusActionChoice id={id} round={round} value={"melee"} />
+          <BonusActionChoice id={id} round={round} value={"ranged"} />
+          <BonusActionChoice id={id} round={round} value={"spell"} />
+          <BonusActionChoice id={id} round={round} value={"other"} />
+        </Box>
+        <Box>
+          <SurprisedChoice id={id} />
+        </Box>
+      </Flex>
+    </Grid>
   );
 };
 
@@ -603,21 +606,26 @@ const ActionsSummary = function ActionsSummary({
   );
 
   return (
-    <ListGroupItem
-      color={
-        confirmed
-          ? "secondary"
-          : creatureType === "player"
-          ? "primary"
-          : "danger"
+    <Alert
+      variant={
+        confirmed ? "muted" : creatureType === "player" ? "primary" : "monster"
       }
+      mb={1}
     >
-      {/* <Alert color={confirmed ? "secondary" : "primary"}> */}
-      {total}
-      {" - "}
-      <b>{name}</b>{" "}
+      <Badge mr={2} variant={"muted"}>
+        {total}
+      </Badge>
+      <b
+        sx={{
+          overflow: "scroll",
+          whiteSpace: "nowrap",
+          textOverflow: "clip",
+        }}
+      >
+        {name}
+      </b>
       {surprised && (
-        <Badge key={`${creature}_surprised`} color={"warning"}>
+        <Badge ml={2} key={`${creature}_surprised`} variant={"surprised"}>
           surprised
         </Badge>
       )}
@@ -627,7 +635,7 @@ const ActionsSummary = function ActionsSummary({
         .map((choice) => (
           <>
             {" "}
-            <Badge key={`${choice.creature}_${choice.category}`}>
+            <Badge ml="2" key={`${choice.creature}_${choice.category}`}>
               {choice.category === "bonus"
                 ? "B/A " + describeChoice(choice)
                 : describeChoice(choice)}
@@ -635,17 +643,13 @@ const ActionsSummary = function ActionsSummary({
           </>
         ))}
       {!confirmed && (
-        <Button
-          close
+        <Close
+          ml="auto"
+          mr={-2}
           onClick={() => confirmChoices(creature, total)}
-          aria-label="Confirm"
-        >
-          <span aria-hidden>
-            <Confirm />
-          </span>
-        </Button>
+        />
       )}
-    </ListGroupItem>
+    </Alert>
   );
 };
 
@@ -667,16 +671,17 @@ const NoChoiceSummary = function NoChoiceSummary({ id }: { id: CreatureId }) {
   const surprised = useRecoilValue(creatureHasCondition([id, "surprised"]));
 
   return (
-    <ListGroupItem color={"light"}>
-      <b>{name}</b>{" "}
+    <Alert variant={"invisible"} mb={1}>
+      <b>{name}</b>
       {surprised && (
-        <Badge key={`${id}_surprised`} color={"warning"}>
+        <Badge ml="2" key={`${id}_surprised`} variant={"surprised"}>
           surprised
         </Badge>
       )}
-    </ListGroupItem>
+    </Alert>
   );
 };
+//      <Close ml="auto" mr={-2} />
 
 const Init = function Init() {
   return (
@@ -702,32 +707,21 @@ const Init = function Init() {
         set(currentRoundState, round);
       }}
     >
-      <Layout>
-        <Container fluid={true}>
-          <h1>
-            <RoundNumberHeading /> <NewRoundNumberButton />
-          </h1>
-          <Row>
-            <Col md={4}>
-              <ListGroup>
-                <NoChoices />
-                <ConfirmedChoices />
-                <UnconfirmedChoices />
-              </ListGroup>
-            </Col>
-            <Col md={8}>
-              <Choices />
-            </Col>
-          </Row>
-          <hr />
-          <Row>
-            <Col>
-              <AddCreatureButton />
-              <CreatureList />
-            </Col>
-          </Row>
-        </Container>
-      </Layout>
+      <h1>
+        <RoundNumberHeading /> <NewRoundNumberButton />
+      </h1>
+      <Grid gap={3} columns={[1, null, "1fr 2fr"]}>
+        <Box>
+          <NoChoices />
+          <ConfirmedChoices />
+          <UnconfirmedChoices />
+        </Box>
+        <Box>
+          <Choices />
+        </Box>
+      </Grid>
+      <AddCreatureButton />
+      <CreatureList />
     </RecoilRoot>
   );
 };

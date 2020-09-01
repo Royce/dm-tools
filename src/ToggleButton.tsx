@@ -1,12 +1,12 @@
-import React from "react";
-import { Button } from "reactstrap";
+import React, { ReactElement } from "react";
+import { IconButton } from "theme-ui";
 
 export type ToggleButtonProps = {
   color?: string;
   onClick: () => void;
   on?: boolean;
   disabled: boolean;
-  children: any;
+  children: JSX.Element | null;
 };
 
 export const ToggleButton = function ({
@@ -15,16 +15,19 @@ export const ToggleButton = function ({
   disabled,
   onClick,
   children,
-}: ToggleButtonProps) {
+}: ToggleButtonProps): ReactElement {
   return (
-    <Button
+    <IconButton
       disabled={disabled}
-      outline={!on}
-      size="sm"
+      sx={{
+        backgroundColor: on ? (disabled ? "muted" : color) : "background",
+        color: on ? "background" : disabled ? "muted" : "text",
+        border: "1px solid transparent",
+        borderColor: on ? "transparent" : disabled ? "muted" : "text",
+      }}
       onClick={onClick}
-      color={on ? color : undefined}
     >
       {children}
-    </Button>
+    </IconButton>
   );
 };

@@ -20,13 +20,21 @@ export default {
     heading: 1.6,
   },
   colors: {
-    text: "#000",
-    background: "#fff",
-    primary: "#009bff",
-    secondary: "#bfe7ff", // A contrast color for emphasizing UI
+    text: "black",
+    background: "white",
+    primary: "deepskyblue",
+    secondary: "lightslategray", // A contrast color for emphasizing UI
     accent: "#922610",
-    highlight: "#8AF2FF", // A background color for highlighting text
-    muted: "#333",
+    highlight: "#8FF", // A background color for highlighting text
+    muted: "darkgray",
+    //
+    move: "mediumblue",
+    swap: "dimgray",
+    spell: "darkred",
+    ranged: "darkred",
+    melee: "darkred",
+    other: "forestgreen",
+    surprised: "gold",
   },
   text: {
     heading: {
@@ -77,5 +85,63 @@ export default {
     //   border: "1px solid",
     //   borderColor: "muted",
     // },
+  },
+  alerts: {
+    primary: {
+      color: "text",
+      backgroundColor: "#f0f9ff",
+      border: "1px solid transparent",
+      borderColor: "primary",
+    },
+    monster: {
+      color: "text",
+      backgroundColor: "#fff3f3",
+      border: "1px solid transparent",
+      borderColor: "accent",
+    },
+    muted: {
+      color: "text",
+      backgroundColor: "#eee",
+      border: "1px solid transparent",
+      borderColor: "muted",
+    },
+    invisible: {
+      color: "#666",
+      backgroundColor: "background",
+      border: "1px solid transparent",
+      borderColor: "#999",
+    },
+  },
+  badges: {
+    surprised: { color: "text", backgroundColor: "surprised" },
+  },
+  buttons: {
+    primary: {
+      color: "background",
+      bg: "primary",
+      "&:hover": {
+        bg: "text",
+      },
+    },
+    secondary: {
+      color: "background",
+      bg: "secondary",
+      "&:hover": {
+        bg: "text",
+      },
+    },
+  },
+  links: {
+    nav: {
+      py: 1,
+      px: 2,
+      borderRadius: "10px",
+      border: "none",
+      bg: "background",
+      mr: 2,
+    },
+  },
+  borders: {
+    none: "1px solid transparent",
   },
 };

@@ -1,55 +1,39 @@
 import React, { useState } from "react";
-import {
-  Nav,
-  NavItem,
-  NavLink,
-  TabContent,
-  TabPane,
-  Container,
-} from "reactstrap";
 import ReactDOM from "react-dom";
 import Initiative from "./Initiative";
 import Monsters from "./Monsters";
-import { ThemeProvider } from "theme-ui";
+import { ThemeProvider, Flex, NavLink, Box } from "theme-ui";
 import theme from "./theme";
-
-import "bootstrap/dist/css/bootstrap.min.css";
 
 type Tab = "initiative" | "monsters";
 
 const Everything = function Everything() {
-  const [activeTab, setActiveTab] = useState<Tab>("monsters");
+  const [activeTab, setActiveTab] = useState<Tab>("initiative");
+  const highlightTabSx = { bg: "gold" };
 
   return (
     <ThemeProvider theme={theme}>
-      <Container fluid={true}>
-        <Nav tabs={true}>
-          <NavItem>
-            <NavLink
-              className={activeTab === "initiative" ? "active" : ""}
-              onClick={() => setActiveTab("initiative")}
-            >
-              Initiative
-            </NavLink>
-          </NavItem>
-          <NavItem>
-            <NavLink
-              className={activeTab === "monsters" ? "active" : ""}
-              onClick={() => setActiveTab("monsters")}
-            >
-              Monsters
-            </NavLink>
-          </NavItem>
-        </Nav>
-        <TabContent activeTab={activeTab}>
-          <TabPane tabId={"initiative"}>
-            {activeTab === "initiative" && <Initiative />}
-          </TabPane>
-          <TabPane tabId={"monsters"}>
-            <Monsters />
-          </TabPane>
-        </TabContent>
-      </Container>{" "}
+      <Flex as="nav" p={2} bg="accent">
+        <NavLink
+          href="#!"
+          onClick={() => setActiveTab("initiative")}
+          sx={activeTab === "initiative" ? highlightTabSx : {}}
+        >
+          Initiative
+        </NavLink>
+        <NavLink
+          href="#!"
+          onClick={() => setActiveTab("monsters")}
+          sx={activeTab === "monsters" ? highlightTabSx : {}}
+        >
+          Monsters
+        </NavLink>
+        <NavLink href="#!">Create</NavLink>
+      </Flex>
+      <Box p={2}>
+        {activeTab === "initiative" && <Initiative />}
+        {activeTab === "monsters" && <Monsters />}
+      </Box>
     </ThemeProvider>
   );
 };
