@@ -108,36 +108,47 @@ type Choice = {
   category: ChoiceCategory;
   choice: ChoiceValue;
   confirmed_at?: number;
+  chosen_at?: number;
   creature: CreatureId;
 };
 interface ChoiceMap {
-  [index: string]: Choice;
+  choices: {
+    [index: string]: Choice;
+  };
+  max_confirmed_at: number;
 }
 const choicesForRoundMap = atomFamily<ChoiceMap, Round>({
   key: "choiceForRoundMap",
-  default: (round) => ({}),
+  default: (round) => ({ choices: {}, max_confirmed_at: 0 }),
 });
 type CreatureRoundCategory = [CreatureId, number, ChoiceCategory];
 const choiceFor = selectorFamily<ChoiceValue, CreatureRoundCategory>({
   key: "choiceForIdRoundCategory",
   get: ([id, round, category]) => ({ get }) => {
     const key = `${id}_${category}`;
-    const map = get(choicesForRoundMap(round));
-    const match = map[key];
+    const choices = get(choicesForRoundMap(round)).choices;
+    const match = choices[key];
     return (match || {}).choice;
   },
   set: ([id, round, category]) => ({ set, get }, newValue) => {
     const key = `${id}_${category}`;
-    set<ChoiceMap>(choicesForRoundMap(round), (map) => {
-      return {
-        ...map,
-        [key]: {
-          category,
-          creature: id,
-          choice: newValue instanceof DefaultValue ? undefined : newValue,
-        },
-      };
-    });
+    set<ChoiceMap>(
+      choicesForRoundMap(round),
+      ({ choices, max_confirmed_at }) => {
+        return {
+          choices: {
+            ...choices,
+            [key]: {
+              category,
+              creature: id,
+              choice: newValue instanceof DefaultValue ? undefined : newValue,
+              chosen_at: max_confirmed_at,
+            },
+          },
+          max_confirmed_at,
+        };
+      }
+    );
   },
 });
 
@@ -145,8 +156,8 @@ const choiceConfirmedFor = selectorFamily<boolean, CreatureRoundCategory>({
   key: "choiceForIdRoundCategory",
   get: ([id, round, category]) => ({ get }) => {
     const key = `${id}_${category}`;
-    const map = get(choicesForRoundMap(round));
-    const match = map[key];
+    const choices = get(choicesForRoundMap(round)).choices;
+    const match = choices[key];
     return !!(match || {}).confirmed_at;
   },
 });
@@ -154,8 +165,8 @@ const choiceConfirmedFor = selectorFamily<boolean, CreatureRoundCategory>({
 const choicesForRound = selectorFamily<Choice[], Round>({
   key: "choiceForRound",
   get: (round) => ({ get }) => {
-    const map = get(choicesForRoundMap(round));
-    return Object.values(map);
+    const choices = get(choicesForRoundMap(round)).choices;
+    return Object.values(choices);
   },
 });
 
@@ -187,15 +198,19 @@ const unconfirmedChoices = selectorFamily<CreatureInitiativeChoices[], Round>({
         ]
       );
 
+      const chosen_at = _.chain(choices).map("chosen_at").max().value();
+
       const surprised = get(
         creatureHasCondition([choices[0].creature, "surprised"])
       );
       return {
         creature: choices[0].creature,
-        initiative: choicesWithInitiative.reduce(
-          (tally, [, init]) => tally + init,
-          surprised ? 10 : 0
-        ),
+        initiative:
+          chosen_at +
+          choicesWithInitiative.reduce(
+            (tally, [, init]) => tally + init,
+            surprised ? 10 : 0
+          ),
         choices: choicesWithInitiative,
       };
     });
@@ -605,11 +620,14 @@ const ActionsSummary = function ActionsSummary({
   const confirmChoices = useRecoilCallback(
     ({ set }) => (id: CreatureId, initiative: Initiative) => {
       set<ChoiceMap>(choicesForRoundMap(currentRound), (map) => {
-        return _.mapValues(map, (choice) =>
-          choice.creature === id
-            ? { ...choice, confirmed_at: initiative }
-            : choice
-        );
+        return {
+          choices: _.mapValues(map.choices, (choice) =>
+            choice.creature === id && choice.choice !== undefined
+              ? { ...choice, confirmed_at: initiative }
+              : choice
+          ),
+          max_confirmed_at: Math.max(map.max_confirmed_at, initiative),
+        };
       });
     },
     [currentRound]
