@@ -38,7 +38,7 @@ import { FiAlertTriangle as Surprise } from "react-icons/fi";
 import { rng, Dice } from "./util/rng";
 import { hashString } from "./util/hash";
 import { Confirm } from "./ButtonConfirm";
-import { ToggleButton } from "./ToggleButton";
+import { ToggleButton } from "./ButtonChoiceToggle";
 
 //
 // Data
