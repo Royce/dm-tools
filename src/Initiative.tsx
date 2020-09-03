@@ -309,10 +309,22 @@ const RoundNumberHeading = function RoundNumberHeading() {
 };
 
 const NewRoundNumberButton = function NewRoundNumberButton() {
-  const setRoundNumber = useSetRecoilState(currentRoundState);
+  const [roundNumber, setRoundNumber] = useRecoilState(currentRoundState);
+  const clearConditionForAll = useRecoilCallback(
+    ({ set, snapshot }) => async (condition: Condition) => {
+      const ids = await snapshot.getPromise(creatureListState);
+      for (let index = 0; index < ids.length; index++) {
+        set(creatureHasCondition([ids[index], condition]), false);
+      }
+    },
+    []
+  );
+
   const incrementRound = useCallback(() => {
     setRoundNumber((n) => n + 1);
-  }, [setRoundNumber]);
+    if (roundNumber === 1) clearConditionForAll("surprised");
+  }, [roundNumber, setRoundNumber, clearConditionForAll]);
+
   return (
     <Button variant="secondary" onClick={incrementRound} sx={{ fontSize: 1 }}>
       Next Round
@@ -508,9 +520,11 @@ const ChoicesItem = function Choices({ id }: { id: CreatureId }) {
           <BonusActionChoice id={id} round={round} value={"spell"} />
           <BonusActionChoice id={id} round={round} value={"other"} />
         </Box>
-        <Box>
-          <SurprisedChoice id={id} />
-        </Box>
+        {round === 1 && (
+          <Box>
+            <SurprisedChoice id={id} />
+          </Box>
+        )}
       </Flex>
     </Grid>
   );
