@@ -1,14 +1,14 @@
 /** @jsx jsx */
 import { jsx } from "theme-ui";
 import React from "react";
-import { RecoilRoot, selector, atom, useRecoilValue } from "recoil";
+import { selector, atom, useRecoilValue } from "recoil";
 import axios from "axios";
 import * as f from "fp-ts";
 
 import MonsterComponent from "./MonsterComponent";
 import { MonsterCodec, MonsterType } from "./MonsterType";
 
-const monsterId = atom({ key: "monsterId", default: "bone-devil" });
+const monsterId = atom({ key: "monsterId", default: "spy" });
 
 const monsterQuery = selector<MonsterType>({
   key: "monsterQuery",
@@ -29,17 +29,21 @@ const monsterQuery = selector<MonsterType>({
 
 const RandomMonster = function RandomMonster() {
   const monster = useRecoilValue(monsterQuery);
-  return <MonsterComponent {...monster} />;
+  return (
+    <React.Fragment>
+      <MonsterComponent {...monster} />
+    </React.Fragment>
+  );
 };
 
 const Monsters = function Init() {
   return (
-    <RecoilRoot>
+    <React.Fragment>
       <h1>Heading</h1>
       <React.Suspense fallback={<div>Loading...</div>}>
         <RandomMonster />
       </React.Suspense>
-    </RecoilRoot>
+    </React.Fragment>
   );
 };
 

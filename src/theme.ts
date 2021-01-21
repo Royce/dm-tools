@@ -42,7 +42,7 @@ export default {
       fontFamily: "heading",
       fontWeight: "body",
       fontVariant: "small-caps",
-      borderBottom: "1px solid black",
+      borderBottom: "separator",
       borderBottomColor: "accent",
       paddingTop: 2,
     },
@@ -79,12 +79,12 @@ export default {
       borderColor: "goldenrod",
       backgroundColor: "background",
     },
-    // compact: {
-    //   padding: 1,
-    //   borderRadius: 2,
-    //   border: "1px solid",
-    //   borderColor: "muted",
-    // },
+    log: {
+      p: 1,
+      borderRadius: 4,
+      boxShadow: "0 0 8px rgba(0, 0, 0, 0.3)",
+      backgroundColor: "secondary",
+    },
   },
   alerts: {
     primary: {
@@ -143,5 +143,6 @@ export default {
   },
   borders: {
     none: "1px solid transparent",
+    separator: "1px solid black",
   },
 };

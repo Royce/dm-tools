@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   RecoilRoot,
   atom,
@@ -11,18 +11,10 @@ import {
   selectorFamily,
   SetterOrUpdater,
   DefaultValue,
+  MutableSnapshot,
 } from "recoil";
 import _ from "lodash";
-import {
-  Button,
-  Badge,
-  Close,
-  Alert,
-  Heading,
-  Box,
-  Grid,
-  Flex,
-} from "theme-ui";
+import { Button, Badge, Alert, Heading, Box, Grid, Flex, Link } from "theme-ui";
 import {
   GiWalk as Move,
   GiRun as Dash,
@@ -33,7 +25,6 @@ import {
   GiTrade as Swap,
 } from "react-icons/gi";
 import { FiAlertTriangle as Surprise } from "react-icons/fi";
-// import { BsCheck as Confirm } from "react-icons/bs";
 
 import { rng, Dice } from "./util/rng";
 import { hashString } from "./util/hash";
@@ -429,7 +420,7 @@ const SurprisedChoice = function SurprisedChoice({ id }: { id: CreatureId }) {
       onClick={() => setSurprised(!surprised)}
       color={"surprised"}
     >
-      {"surprised" === "surprised" ? <Surprise /> : null}
+      <Surprise />
     </ToggleButton>
   );
 };
@@ -619,16 +610,20 @@ const ActionsSummary = function ActionsSummary({
 }) {
   const confirmChoices = useRecoilCallback(
     ({ set }) => (id: CreatureId, initiative: Initiative) => {
-      set<ChoiceMap>(choicesForRoundMap(currentRound), (map) => {
-        return {
-          choices: _.mapValues(map.choices, (choice) =>
-            choice.creature === id && choice.choice !== undefined
-              ? { ...choice, confirmed_at: initiative }
-              : choice
-          ),
-          max_confirmed_at: Math.max(map.max_confirmed_at, initiative),
-        };
-      });
+      set<ChoiceMap>(
+        choicesForRoundMap(currentRound),
+        ({ choices, max_confirmed_at }) => {
+          const confirmed_at = Math.max(max_confirmed_at + 0.1, initiative);
+          return {
+            choices: _.mapValues(choices, (choice) =>
+              choice.creature === id && choice.choice !== undefined
+                ? { ...choice, confirmed_at }
+                : choice
+            ),
+            max_confirmed_at: confirmed_at,
+          };
+        }
+      );
     },
     [currentRound]
   );
@@ -646,7 +641,7 @@ const ActionsSummary = function ActionsSummary({
       mb={1}
     >
       <Badge mr={2} variant={"muted"}>
-        {total}
+        {Math.floor(total)}
       </Badge>
       <b
         sx={{
@@ -717,29 +712,33 @@ const NoChoiceSummary = function NoChoiceSummary({ id }: { id: CreatureId }) {
 //      <Close ml="auto" mr={-2} />
 
 const Init = function Init() {
+  const setup = useRecoilCallback(
+    ({ set }) => () => {
+      const encounter: Creature[] = [
+        { name: "Orel", type: "player" },
+        { name: "Steve", type: "player" },
+        { name: "Rinn", type: "player" },
+        { name: "Flying Snake 1", type: "monster" },
+        { name: "Flying Snake 2", type: "monster" },
+        { name: "Flying Snake 3", type: "monster" },
+        { name: "Flying Snake 4", type: "monster" },
+      ];
+      const ids = encounter.map(() => getId());
+
+      _.forEach(encounter, (creature, index) =>
+        set<Creature>(creatureForId(ids[index]), creature)
+      );
+      set(creatureListState, ids);
+
+      const round = 1;
+      set(currentRoundState, round);
+    },
+    []
+  );
+  useEffect(setup, [setup]);
+
   return (
-    <RecoilRoot
-      initializeState={({ set }) => {
-        const encounter: Creature[] = [
-          { name: "Orel", type: "player" },
-          { name: "Steve", type: "player" },
-          { name: "Rinn", type: "player" },
-          { name: "Flying Snake 1", type: "monster" },
-          { name: "Flying Snake 2", type: "monster" },
-          { name: "Flying Snake 3", type: "monster" },
-          { name: "Flying Snake 4", type: "monster" },
-        ];
-        const ids = encounter.map(() => getId());
-
-        _.forEach(encounter, (creature, index) =>
-          set<Creature>(creatureForId(ids[index]), creature)
-        );
-        set(creatureListState, ids);
-
-        const round = 1;
-        set(currentRoundState, round);
-      }}
-    >
+    <React.Fragment>
       <h1>
         <RoundNumberHeading /> <NewRoundNumberButton />
       </h1>
@@ -753,9 +752,12 @@ const Init = function Init() {
           <Choices />
         </Box>
       </Grid>
-      <AddCreatureButton />
-      <CreatureList />
-    </RecoilRoot>
+      {/* <AddCreatureButton />
+      <CreatureList /> */}
+      <Link href="https://media.wizards.com/2017/dnd/downloads/UAGreyhawkInitiative.pdf">
+        Greyhawk Initiative. Unearthed Arcana
+      </Link>
+    </React.Fragment>
   );
 };
 

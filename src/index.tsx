@@ -1,14 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import ReactDOM from "react-dom";
+import { RecoilRoot } from "recoil";
+
 import Initiative from "./Initiative";
 import Monsters from "./Monsters";
+import CreateMonster from "./CreateMonster";
+import Log from "./log/Log";
+
 import { ThemeProvider, Flex, NavLink, Box } from "theme-ui";
 import theme from "./theme";
 
-type Tab = "initiative" | "monsters";
+type Tab = "initiative" | "monsters" | "create-monster" | "log";
 
 const Everything = function Everything() {
-  const [activeTab, setActiveTab] = useState<Tab>("initiative");
+  const [activeTab, setActiveTab] = useState<Tab>("monsters");
   const highlightTabSx = { bg: "gold" };
 
   return (
@@ -28,12 +33,22 @@ const Everything = function Everything() {
         >
           Monsters
         </NavLink>
-        <NavLink href="#!">Create</NavLink>
+        <NavLink
+          href="#!"
+          onClick={() => setActiveTab("create-monster")}
+          sx={activeTab === "create-monster" ? highlightTabSx : {}}
+        >
+          Create
+        </NavLink>
       </Flex>
-      <Box p={2}>
-        {activeTab === "initiative" && <Initiative />}
-        {activeTab === "monsters" && <Monsters />}
-      </Box>
+      <RecoilRoot>
+        <Box p={2}>
+          {activeTab === "initiative" && <Initiative />}
+          {activeTab === "monsters" && <Monsters />}
+          {activeTab === "create-monster" && <CreateMonster />}
+        </Box>
+        <Log />
+      </RecoilRoot>
     </ThemeProvider>
   );
 };

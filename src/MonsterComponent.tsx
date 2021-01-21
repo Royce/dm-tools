@@ -3,6 +3,10 @@ import { jsx, Badge, Box, Flex, Card, Heading } from "theme-ui";
 import React from "react";
 import _ from "lodash";
 import { MonsterType, UsageType } from "./MonsterType";
+import { useSetRecoilState } from "recoil";
+import { RollableText } from "./log/RollableText";
+import { humanize } from "./util/humanize";
+import { numberToStringWithSign } from "./util/numberToStringWithSign";
 
 const Monster = function Monster(props: MonsterType) {
   return (
@@ -70,22 +74,46 @@ const MonsterStats = function MonsterStats(props: MonsterType) {
       <tbody>
         <tr>
           <td sx={{ textAlign: "center" }}>
-            <AbilityScore score={props.strength} />
+            <AbilityScore
+              score={props.strength}
+              owner={props.name}
+              desc={"Strength"}
+            />
           </td>
           <td sx={{ textAlign: "center" }}>
-            <AbilityScore score={props.dexterity} />
+            <AbilityScore
+              score={props.dexterity}
+              owner={props.name}
+              desc={"Dexterity"}
+            />
           </td>
           <td sx={{ textAlign: "center" }}>
-            <AbilityScore score={props.constitution} />
+            <AbilityScore
+              score={props.constitution}
+              owner={props.name}
+              desc={"Constitution"}
+            />
           </td>
           <td sx={{ textAlign: "center" }}>
-            <AbilityScore score={props.intelligence} />
+            <AbilityScore
+              score={props.intelligence}
+              owner={props.name}
+              desc={"Intelligence"}
+            />
           </td>
           <td sx={{ textAlign: "center" }}>
-            <AbilityScore score={props.wisdom} />
+            <AbilityScore
+              score={props.wisdom}
+              owner={props.name}
+              desc={"Wisdom"}
+            />
           </td>
           <td sx={{ textAlign: "center" }}>
-            <AbilityScore score={props.charisma} />
+            <AbilityScore
+              score={props.charisma}
+              owner={props.name}
+              desc={"Charisma"}
+            />
           </td>
         </tr>
       </tbody>
@@ -108,18 +136,16 @@ const MonsterArmorClass = function MonsterArmorClass(props: MonsterType) {
   );
 };
 
-const numberToStringWithSign = function numberToStringWithSign(
-  n: number
-): string {
-  return n >= 0 ? `+${n}` : n.toString();
-};
-
-const AbilityScore = function AbilityScore({ score }: { score: number }) {
-  const modifier = attributeScoreToModifier(score);
+const AbilityScore = function AbilityScore(props: {
+  score: number;
+  owner: string;
+  desc: string;
+}) {
+  const modifier = attributeScoreToModifier(props.score);
   return (
-    <span title={score.toString()}>
-      {score} (<Rollable>{modifier}</Rollable>)
-    </span>
+    <React.Fragment>
+      {props.score} (<RollableText {...props}>{modifier}</RollableText>)
+    </React.Fragment>
   );
 };
 
@@ -139,9 +165,9 @@ const MonsterHitPoints = function MonsterHitPoints(props: MonsterType) {
       {props.hit_dice && (
         <React.Fragment>
           (
-          <Rollable>
+          <RollableText owner={props.name} desc="Hit Points">
             {hitPointDiceString(props.hit_dice, props.constitution)}
-          </Rollable>
+          </RollableText>
           )
         </React.Fragment>
       )}
@@ -181,7 +207,10 @@ const MonsterLegendaryActions = function MonsterLegendaryActions(
   return (
     <Box>
       <Heading as={"h3"}>Legendary Actions</Heading>
-      <ListOfNameDescriptions list={props.legendary_actions} />
+      <ListOfNameDescriptions
+        owner={props.name}
+        list={props.legendary_actions}
+      />
     </Box>
   );
 };
@@ -192,7 +221,7 @@ const MonsterActions = function MonsterActions(props: MonsterType) {
   return (
     <React.Fragment>
       <Heading as={"h3"}>Actions</Heading>
-      <ListOfNameDescriptions list={props.actions} />
+      <ListOfNameDescriptions owner={props.name} list={props.actions} />
     </React.Fragment>
   );
 };
@@ -203,7 +232,7 @@ const MonsterReactions = function MonsterReactions(props: MonsterType) {
   return (
     <Box>
       <Heading as={"h3"}>Reactions</Heading>
-      <ListOfNameDescriptions list={props.reactions} />
+      <ListOfNameDescriptions owner={props.name} list={props.reactions} />
     </Box>
   );
 };
@@ -249,10 +278,6 @@ const MonsterSenses = function MonsterSenses(props: MonsterType) {
   );
 };
 
-const humanize = function humanize(str: string): string {
-  return str.replace("_", " ").replace(/^./, str[0].toUpperCase());
-};
-
 const MonsterModifiers = function MonsterModifiers(props: {
   heading: string;
   list: string[];
@@ -272,63 +297,56 @@ const MonsterModifiers = function MonsterModifiers(props: {
 const MonsterAbilities = function MonsterAbilities(props: MonsterType) {
   if (!props.special_abilities) return null;
 
-  return <ListOfNameDescriptions list={props.special_abilities} />;
+  return (
+    <ListOfNameDescriptions owner={props.name} list={props.special_abilities} />
+  );
 };
 
-const ListOfNameDescriptions = function ListOfNameDescriptions({
-  list,
-}: {
+const ListOfNameDescriptions = function ListOfNameDescriptions(props: {
+  owner: string;
   list: { name: string; desc: string; usage?: UsageType }[];
 }) {
   return (
     <React.Fragment>
-      {_.chain(list)
-        .map(({ name, desc, usage }) => (
-          <Box>
-            <Heading as="h4" variant="inline">
-              {name}
-            </Heading>
-            <p sx={{ display: "inline" }}>
-              <Description desc={desc} />{" "}
-              {usage && <em>({usageString(usage)})</em>}
-            </p>
-          </Box>
-        ))
+      {_.chain(props.list)
+        .map(({ name, desc, usage }) => {
+          const parts = desc.split(/(:|\.\s|\+\d+|\([\d\s\+d]+\))/);
+          return (
+            <Box>
+              <Heading as="h4" variant="inline">
+                {name}
+              </Heading>
+              <p sx={{ display: "inline" }}>
+                {parts.map((v, index) => {
+                  if (parts[index + 1] === ":") return <em>{v}</em>;
+                  if (v.startsWith("+"))
+                    return (
+                      <RollableText owner={props.owner} desc={`${name}`}>
+                        {v}
+                      </RollableText>
+                    );
+                  if (v.startsWith("(") && v.endsWith(")"))
+                    return (
+                      <React.Fragment>
+                        (
+                        <RollableText
+                          owner={props.owner}
+                          desc={`${name} damage`}
+                        >
+                          {v.substring(1, v.length - 1)}
+                        </RollableText>
+                        )
+                      </React.Fragment>
+                    );
+                  return v;
+                })}
+                {usage && <em>({usageString(usage)})</em>}
+              </p>
+            </Box>
+          );
+        })
         .value()}
     </React.Fragment>
-  );
-};
-
-const Description = function (props: { desc: string }) {
-  const parts = props.desc.split(/(:|\.\s|\+\d+|\([\d\s\+d]+\))/);
-
-  return (
-    <React.Fragment>
-      {parts.map((v, index) => {
-        if (parts[index + 1] === ":") return <em>{v}</em>;
-        if (v.startsWith("+")) return <Rollable>{v}</Rollable>;
-        if (v.startsWith("(") && v.endsWith(")"))
-          return (
-            <React.Fragment>
-              (<Rollable>{v.substring(1, v.length - 1)}</Rollable>)
-            </React.Fragment>
-          );
-        return v;
-      })}
-    </React.Fragment>
-  );
-};
-
-const Rollable = function Rollable(props: {
-  roll?: string | number;
-  children: string | number;
-}) {
-  return (
-    <span sx={{ color: "primary" }}>
-      {typeof props.children === "string"
-        ? props.children
-        : numberToStringWithSign(props.children)}
-    </span>
   );
 };
 
